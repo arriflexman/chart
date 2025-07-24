@@ -1,0 +1,450 @@
+{
+  "name": "Chart_analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.chart-img.com/v2/tradingview/advanced-chart/storage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "XkBX0McFcs1TmbX0oerEq6GFb2Igzo6a2Jl9PP9f"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"theme\": \"dark\",\n  \"interval\": \"1h\",\n  \"symbol\": \"GATEIO:{{ $json.contract }}\",\n  \"override\": {\n    \"showStudyLastValue\": false\n  },\n  \"studies\": [\n    {\n      \"name\": \"Volume\",\n      \"forceOverlay\": true\n    },\n    {\n      \"name\": \"MACD\",\n      \"override\": {\n        \"Signal.linewidth\": 2,\n        \"Signal.color\": \"rgb(255,65,129)\"\n      }\n    }\n  ]\n} ",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1260,
+        280
+      ],
+      "id": "681017b2-8fd3-46fd-94f8-2cf2c08a3e31",
+      "name": "GET_CHART",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1480,
+        280
+      ],
+      "id": "96c2011d-deaa-4ecc-ab0c-0822cee3eea5",
+      "name": "GET_IMG"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "7274498508",
+        "file": "={{ $('GET_IMG').item.json.url }}",
+        "replyMarkup": "=",
+        "forceReply": {},
+        "replyKeyboardOptions": {},
+        "replyKeyboardRemove": {},
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        280
+      ],
+      "id": "26f58ade-eb9f-4e9c-85e4-a364609ab940",
+      "name": "Send a photo message",
+      "webhookId": "65fb06a1-4c3d-40a4-bd3e-dd7115f83644",
+      "credentials": {
+        "telegramApi": {
+          "id": "CVgespeNwkGeRRLZ",
+          "name": "Gate io Telegram bot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "7274498508",
+        "text": "={{ $('Analyze Chart').item.json.content }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2140,
+        355
+      ],
+      "id": "0385453d-2717-468d-a7e7-82997b4f07f6",
+      "name": "Send a text message",
+      "webhookId": "cda6e653-9d17-460d-9e41-1d45dff50611",
+      "credentials": {
+        "telegramApi": {
+          "id": "CVgespeNwkGeRRLZ",
+          "name": "Gate io Telegram bot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "=You are a professional crypto trading analyst. Your task is to analyze a screenshot of a crypto futures chart and provide a trading decision (long or short) based on the visible technical indicators and price action.\n\nContext and Strategy:\n\nThe chart shows a coin that recently skyrocketed by more than 20%.\n\nThe chart is from a 1D (daily) time frame, typically on Gate.io.\n\nThe screenshot contains candlestick charts, volume, and MACD (12, 26, 9) indicators.\n\nYour Task:\n\nRead the chart carefully:\n\nObserve the latest price candle (e.g., breakout, wick, rejection).\n\nCheck the MACD histogram, signal line crossover, and divergence.\n\nAnalyze the volume spikes.\n\nDecide if the setup is valid for a long or short position.\n\nProvide a trading plan:\n\n✅ Direction: Long / Short\n\n📈 Entry price: Estimate from visible price levels\n\n🔁 Leverage: Suggest a safe range (e.g., 3x, 5x, 10x) based on risk\n\n🎯 Take-Profit (TP): Set a reasonable TP based on structure or indicator extensions\n\n🛑 Stop-Loss (SL): Protect the capital, ideally based on last swing high/low or ATR\n\n*** ONLY OUTPUT AS PER THE FOLLOWING EAMPLE *****\nExample output format:\nPair: {{ $('Loop Over Items').item.json.contract }}\n✅ Decision: Long\n📈 Entry Price: 0.0945\n🛠 Leverage: 5x\n🎯 Take-Profit: 0.1040 (approx. +10%)\n🛑 Stop-Loss: 0.0890 (approx. -6%)\n- Probability of winning\n🔍 Reasoning:\n- short brief why you took this desicion  ",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1700,
+        280
+      ],
+      "id": "0e23ea97-6695-4905-8120-0323d06b199e",
+      "name": "Analyze Chart",
+      "credentials": {
+        "openAiApi": {
+          "id": "zHPeDPpVs1jqMoLl",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "contract",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        160,
+        280
+      ],
+      "id": "ba296ae7-bc3a-46a3-95ef-ac30bf7f60ad",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const data = item.json;\n\n  // Remove underscores from the 'contract' field\n  const updatedValue = data.contract?.replace(/_/g, '');\n\n  return {\n    json: {\n      ...data,\n      contract: updatedValue,\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        280
+      ],
+      "id": "f814d623-1099-4244-b5f7-0b3adf1772e1",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "url": "https://api.gateio.ws/api/v4/futures/usdt/tickers",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "category",
+              "value": "spot"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -60,
+        280
+      ],
+      "id": "78c97b37-3ca1-46ff-a2ed-f5df2474b38a",
+      "name": "Gateio_Futures_Market_data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "055fb327-8f7e-4f4f-acdd-8b1cd8162d04",
+              "leftValue": "={{ $json.change_percentage }}",
+              "rightValue": 20,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        380,
+        280
+      ],
+      "id": "f93be4f1-a594-4c98-8ecd-56349cc2c6c5",
+      "name": "Filter_Skyrocketing"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        820,
+        280
+      ],
+      "id": "944ff36f-623b-4ba4-926e-cb9f4deb8c9d",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        80
+      ],
+      "id": "33051a00-4557-4f68-8970-f6d9e1469ec7",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -320,
+        280
+      ],
+      "id": "78225176-8a54-4e82-9176-d97cefef336b",
+      "name": "Telegram Trigger",
+      "webhookId": "5eaec60d-abae-4289-ac51-6458720d4d71",
+      "credentials": {
+        "telegramApi": {
+          "id": "CVgespeNwkGeRRLZ",
+          "name": "Gate io Telegram bot account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        280
+      ],
+      "id": "5335ec69-5565-4750-afb5-1abeda44e776",
+      "name": "Wait",
+      "webhookId": "deaaf797-934b-4de3-b30c-b48792340221"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        580
+      ],
+      "id": "2226840c-bfc9-40b0-bb9c-33fc2a54ed50",
+      "name": "No Operation, do nothing1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "GET_CHART": {
+      "main": [
+        [
+          {
+            "node": "GET_IMG",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET_IMG": {
+      "main": [
+        [
+          {
+            "node": "Analyze Chart",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a photo message": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Chart": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Filter_Skyrocketing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gateio_Futures_Market_data": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter_Skyrocketing": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Gateio_Futures_Market_data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "GET_CHART",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f38927c2-50cb-47b1-a24a-51495ebb1b31",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c5bf96801b1937319eec877cdd3d68f4dd725307af8aa0239272992cd009179d"
+  },
+  "id": "XUPOtHVdbScnAOuR",
+  "tags": []
+}
